@@ -86,12 +86,13 @@ public class CurrentWifis extends Activity {
         i.putExtra(Intent.EXTRA_EMAIL, new String[]{"wifi@jonnyzzz.name"});
         i.putExtra(Intent.EXTRA_SUBJECT, "[scan]");
         i.setType("plain/text");
-        i.putExtra(Intent.EXTRA_TEXT, "Data:" + new Gson().toJson(myLog));
-        view.getContext().startActivity(i);
+        i.putExtra(Intent.EXTRA_TEXT, "Data:\r\n" + new Gson().toJson(myLog));
         myLog.reset();
 
         myScanRunning.set(false);
         updateScanButton(false);
+
+        view.getContext().startActivity(i);
       }
     });
   }
