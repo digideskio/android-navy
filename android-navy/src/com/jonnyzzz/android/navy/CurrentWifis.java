@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -86,7 +87,8 @@ public class CurrentWifis extends Activity {
         i.putExtra(Intent.EXTRA_EMAIL, new String[]{"wifi@jonnyzzz.name"});
         i.putExtra(Intent.EXTRA_SUBJECT, "[scan]");
         i.setType("plain/text");
-        i.putExtra(Intent.EXTRA_TEXT, "Data:\r\n" + new Gson().toJson(myLog));
+        final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        i.putExtra(Intent.EXTRA_TEXT, "Data:\r\n" + gson.toJson(myLog));
         myLog.reset();
 
         myScanRunning.set(false);
