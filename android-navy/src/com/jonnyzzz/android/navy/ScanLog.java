@@ -27,4 +27,8 @@ public class ScanLog {
   private static long now() {
     return System.currentTimeMillis();
   }
+
+  public void reset() {
+    myItems.clear();
+  }
 }

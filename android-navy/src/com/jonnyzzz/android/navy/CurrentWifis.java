@@ -88,6 +88,7 @@ public class CurrentWifis extends Activity {
         i.setType("plain/text");
         i.putExtra(Intent.EXTRA_TEXT, "Data:" + new Gson().toJson(myLog));
         view.getContext().startActivity(i);
+        myLog.reset();
 
         myScanRunning.set(false);
         updateScanButton(false);
