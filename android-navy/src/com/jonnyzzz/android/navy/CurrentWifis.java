@@ -9,13 +9,14 @@ import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
-import android.widget.Toast;
+import android.view.ViewGroup;
+import android.widget.*;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CurrentWifis extends Activity {
   /**
@@ -33,8 +34,24 @@ public class CurrentWifis extends Activity {
     }
 
     final ListView lv = (ListView) findViewById(R.id.main_wifis_list);
-    final List<String> detectedWifis = new ArrayList<String>();
-    final ArrayAdapter<String> adapter = new ArrayAdapter<String>(CurrentWifis.this, android.R.layout.simple_list_item_1, detectedWifis);
+    final List<ScanItem> detectedWifis = new ArrayList<ScanItem>();
+    final ScanLog myLog = new ScanLog();
+    final AtomicBoolean myScanRunning = new AtomicBoolean(false);
+
+    final ArrayAdapter<ScanItem> adapter = new ArrayAdapter<ScanItem>(CurrentWifis.this, R.layout.list_item, detectedWifis) {
+      @Override
+      public View getView(int position, View convertView, ViewGroup parent) {
+        View row = convertView;
+        if (row == null) {
+          row = CurrentWifis.this.getLayoutInflater().inflate(R.layout.list_item, parent, false);
+        }
+        final ScanItem item = detectedWifis.get(position);
+        ((TextView) row.findViewById(R.id.listItem_BSSID)).setText(item.getBSSID());
+        ((TextView) row.findViewById(R.id.listItem_Level)).setText("" + item.getLevel());
+        return row;
+      }
+    };
+
     lv.setAdapter(adapter);
     registerReceiver(new BroadcastReceiver() {
       @Override
@@ -42,18 +59,48 @@ public class CurrentWifis extends Activity {
         final List<ScanResult> results = wifi.getScanResults();
         detectedWifis.clear();
         for (ScanResult result : results) {
-          detectedWifis.add(result.SSID + " -> " + result.BSSID + " -> " + result.level);
+          detectedWifis.add(new ScanItem(result.BSSID, result.level));
         }
         Collections.sort(detectedWifis);
         adapter.notifyDataSetChanged();
-        wifi.startScan();
+        myLog.addResults(detectedWifis);
+        if (myScanRunning.get()) {
+          wifi.startScan();
+        }
       }
     }, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
 
     findViewById(R.id.main_share_scan).setOnClickListener(new View.OnClickListener() {
       public void onClick(View view) {
-        wifi.startScan();
+        myScanRunning.set(!myScanRunning.get());
+        if (myScanRunning.get()) {
+          wifi.startScan();
+        }
+        updateScanButton(myScanRunning.get());
       }
     });
+
+    findViewById(R.id.main_share_button).setOnClickListener(new View.OnClickListener() {
+      public void onClick(View view) {
+        Intent i = new Intent(Intent.ACTION_SEND);
+        i.putExtra(Intent.EXTRA_EMAIL, new String[]{"wifi@jonnyzzz.name"});
+        i.putExtra(Intent.EXTRA_SUBJECT, "[scan]");
+        i.setType("plain/text");
+        i.putExtra(Intent.EXTRA_TEXT, "Data:" + new Gson().toJson(myLog));
+        view.getContext().startActivity(i);
+
+        myScanRunning.set(false);
+        updateScanButton(false);
+      }
+    });
+  }
+
+  private void updateScanButton(boolean scanning) {
+    final Button bt = (Button) findViewById(R.id.main_share_scan);
+    if (scanning) {
+      bt.setText("Stop Scan!");
+    } else {
+      bt.setText("Re-Start Scan!");
+    }
   }
 }
