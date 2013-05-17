@@ -13,11 +13,12 @@ import android.view.ViewGroup;
 import android.widget.*;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class CurrentWifis extends Activity {
   /**
@@ -35,21 +36,39 @@ public class CurrentWifis extends Activity {
     }
 
     final ListView lv = (ListView) findViewById(R.id.main_wifis_list);
-    final List<ScanItem> detectedWifis = new ArrayList<ScanItem>();
+    final List<ScanViewItem> detectedWifis = new ArrayList<ScanViewItem>();
     final ScanLog myLog = new ScanLog();
+    final AtomicReference<ScanState> myPersistedState = new AtomicReference<ScanState>(new ScanState());
     final AtomicBoolean myScanRunning = new AtomicBoolean(false);
+    final AtomicBoolean myShowDiff = new AtomicBoolean(false);
 
-    final ArrayAdapter<ScanItem> adapter = new ArrayAdapter<ScanItem>(CurrentWifis.this, R.layout.list_item, detectedWifis) {
+    final ArrayAdapter<ScanViewItem> adapter = new ArrayAdapter<ScanViewItem>(CurrentWifis.this, R.layout.list_item, detectedWifis) {
       @Override
       public View getView(int position, View convertView, ViewGroup parent) {
         View row = convertView;
         if (row == null) {
           row = CurrentWifis.this.getLayoutInflater().inflate(R.layout.list_item, parent, false);
         }
-        final ScanItem item = detectedWifis.get(position);
-        ((TextView) row.findViewById(R.id.listItem_BSSID)).setText(item.getBSSID());
-        ((TextView) row.findViewById(R.id.listItem_Level)).setText("" + item.getLevel());
+        final ScanViewItem item = detectedWifis.get(position);
+        final TextView bssid = (TextView) row.findViewById(R.id.listItem_BSSID);
+        final TextView level = (TextView) row.findViewById(R.id.listItem_Level);
+        final TextView diff = (TextView) row.findViewById(R.id.listItem_selected_Level);
+
+        bssid.setText(item.getBSSID());
+        level.setText(n(item.getActualLevel()));
+        diff.setText(n(item.getRecordedLevel()));
+        diff.setVisibility(!myShowDiff.get() || item.getRecordedLevel() == null ? View.INVISIBLE : View.VISIBLE);
+        level.setVisibility(item.getActualLevel() == null ? View.INVISIBLE : View.VISIBLE);
+
+        level.setBackgroundResource(item.isMatch() ? R.color.wifi_list_actual_bg_matching : R.color.wifi_list_actual_bg_default);
+        diff.setBackgroundResource(item.isMatch() ? R.color.wifi_list_stored_bg_matching : R.color.wifi_list_stored_bg_default);
         return row;
+      }
+
+      @NotNull
+      private String n(Object o) {
+        if (o == null) return "-\u221E";
+        return o.toString();
       }
     };
 
@@ -58,13 +77,16 @@ public class CurrentWifis extends Activity {
       @Override
       public void onReceive(Context c, Intent intent) {
         final List<ScanResult> results = wifi.getScanResults();
-        detectedWifis.clear();
+        final ScanState ss = new ScanState();
         for (ScanResult result : results) {
-          detectedWifis.add(new ScanItem(result.BSSID, result.level));
+          ss.add(result);
         }
-        Collections.sort(detectedWifis);
+
+        detectedWifis.clear();
+        detectedWifis.addAll(ScanState.toItems(ss, myPersistedState.get()));
         adapter.notifyDataSetChanged();
-        myLog.addResults(detectedWifis);
+        myLog.addResults(ss);
+
         if (myScanRunning.get()) {
           wifi.startScan();
         }
@@ -95,6 +117,13 @@ public class CurrentWifis extends Activity {
         updateScanButton(false);
 
         view.getContext().startActivity(i);
+      }
+    });
+
+    findViewById(R.id.main_store).setOnClickListener(new View.OnClickListener() {
+      public void onClick(View view) {
+        myShowDiff.set(true);
+        myPersistedState.set(myLog.getLatestState());
       }
     });
   }

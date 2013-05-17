@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+  <color name="wifi_list_actual_bg_default">#aaa</color>
+  <color name="wifi_list_actual_bg_matching">@color/wifi_list_stored_bg_matching</color>
+  <color name="wifi_list_stored_bg_default">#ff0b7400</color>
+  <color name="wifi_list_stored_bg_matching">#0dcc00</color>
+</resources>

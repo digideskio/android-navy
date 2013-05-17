@@ -19,13 +19,19 @@
             android:id="@+id/main_share_button"
             android:layout_width="wrap_content"
             android:layout_height="fill_parent"
-            android:text="Share detected WiFis scan"
+            android:text="Share"
             />
     <Button
             android:id="@+id/main_share_scan"
             android:layout_width="wrap_content"
             android:layout_height="fill_parent"
             android:text="Scan!"
+            />
+    <Button
+            android:id="@+id/main_store"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:text="Mark"
             />
   </LinearLayout>
   <ListView

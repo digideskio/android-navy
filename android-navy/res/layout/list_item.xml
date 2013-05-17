@@ -11,8 +11,19 @@
           android:text="-72"
           android:gravity="right"
           android:paddingRight="3dp"
-          android:background="@android:color/darker_gray"
-          android:textColor="@android:color/primary_text_dark"
+          android:background="@color/wifi_list_actual_bg_default"
+          android:textColor="#000"
+          android:textSize="10dp"
+          />
+  <TextView
+          android:id="@+id/listItem_selected_Level"
+          android:layout_width="35dp"
+          android:layout_height="wrap_content"
+          android:text="-72"
+          android:gravity="right"
+          android:paddingRight="3dp"
+          android:background="@color/wifi_list_stored_bg_matching"
+          android:textColor="#000"
           android:textSize="10dp"
           />
   <TextView

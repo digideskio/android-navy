@@ -2,9 +2,7 @@ package com.jonnyzzz.android.navy;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -13,15 +11,16 @@ import java.util.Map;
 */
 public class ScanLog {
   private final long myStartTime = now();
-  private final Map<Integer, List<ScanItem>> myItems = new LinkedHashMap<Integer, List<ScanItem>>();
+  private final Map<Integer, ScanState> myItems = new LinkedHashMap<Integer, ScanState>();
+  private ScanState myLatestState = new ScanState();
 
-  public void addResults(@NotNull List<ScanItem> si) {
-    myItems.put((int) (now() - myStartTime), new ArrayList<ScanItem>(si));
+  public void addResults(@NotNull ScanState si) {
+    myItems.put((int) (now() - myStartTime), myLatestState = si);
   }
 
   @NotNull
-  public Map<Integer, List<ScanItem>> getItems() {
-    return myItems;
+  public ScanState getLatestState() {
+    return myLatestState;
   }
 
   private static long now() {
